@@ -93,20 +93,14 @@ st.markdown("""
 # 3. LOAD MODEL (Update untuk Keras 3 / Railway Compatibility)
 @st.cache_resource
 def load_model_ai():
-    # Menggunakan Keras 3 secara langsung untuk menangani deserialization InputLayer
-    try:
-        import keras
-    except ImportError:
-        from tensorflow import keras
-    
+    # Menggunakan Keras 3 mandiri untuk kompatibilitas penuh
+    import keras
     import pickle
     import os
 
-    # Tentukan path file
     model_path = 'model_training/sentiment_model_lstm.h5'
     tokenizer_path = 'model_training/tokenizer.pkl'
 
-    # Validasi keberadaan file
     if not os.path.exists(model_path):
         st.error(f"File model tidak ditemukan: {model_path}")
         st.stop()
@@ -115,21 +109,16 @@ def load_model_ai():
         st.error(f"File tokenizer tidak ditemukan: {tokenizer_path}")
         st.stop()
 
-    # Muat model dengan Keras 3 engine
+    # Memuat model dengan engine Keras 3
     try:
         model = keras.models.load_model(model_path, compile=False)
     except Exception as e:
         st.error(f"Gagal memuat model. Error: {e}")
-        st.info("Pastikan requirements.txt sudah menggunakan tensorflow==2.16.1 dan keras==3.3.3")
+        st.info("Saran: Jika error berlanjut, hapus 'Build Cache' di dashboard Railway sebelum push ulang.")
         st.stop()
     
-    # Muat tokenizer
-    try:
-        with open(tokenizer_path, 'rb') as handle:
-            tokenizer = pickle.load(handle)
-    except Exception as e:
-        st.error(f"Gagal memuat tokenizer: {e}")
-        st.stop()
+    with open(tokenizer_path, 'rb') as handle:
+        tokenizer = pickle.load(handle)
         
     return model, tokenizer
 
