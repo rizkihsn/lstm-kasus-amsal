@@ -93,7 +93,7 @@ st.markdown("""
 # 3. LOAD MODEL
 @st.cache_resource
 def load_model_ai():
-    # Menggunakan tf_keras sebagai solusi utama untuk kompatibilitas Railway
+    # Menggunakan tf_keras untuk kompatibilitas model .h5 lama/baru
     try:
         import tf_keras as keras
     except ImportError:
@@ -101,6 +101,28 @@ def load_model_ai():
     
     import pickle
     import os
+
+    model_path = 'model_training/sentiment_model_lstm.h5'
+    tokenizer_path = 'model_training/tokenizer.pkl'
+
+    if not os.path.exists(model_path):
+        st.error(f"File model tidak ditemukan: {model_path}")
+        st.stop()
+    
+    # MUAT MODEL DENGAN CUSTOM OBJECTS (Jika diperlukan)
+    # Kita gunakan Keras Legacy untuk membaca file .h5 agar tidak error 'optional'
+    try:
+        model = keras.models.load_model(model_path, compile=False)
+    except TypeError:
+        # Jika masih error, gunakan trik load_weights jika arsitektur diketahui, 
+        # tapi biasanya tf_keras sudah cukup menyelesaikan masalah ini.
+        st.error("Gagal memuat model. Pastikan requirements.txt sudah menyertakan 'tf_keras'")
+        st.stop()
+    
+    with open(tokenizer_path, 'rb') as handle:
+        tokenizer = pickle.load(handle)
+        
+    return model, tokenizer
 
     # Sesuaikan dengan nama file asli di folder model_training
     model_path = 'model_training/sentiment_model_lstm.h5'
