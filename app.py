@@ -90,12 +90,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. LOAD MODEL
 @st.cache_resource
 def load_model_ai():
+    import tensorflow as tf
+    import pickle
+
     model = tf.keras.models.load_model(
         'model_training/sentiment_model_lstm.h5',
-        compile=False
+        compile=False,
+        safe_mode=False   # 🔥 TAMBAHAN PENTING
     )
     
     with open('model_training/tokenizer.pkl', 'rb') as handle:
