@@ -41,8 +41,16 @@ def load_model_ai():
         st.stop()
 
     try:
-        # Load model dengan cara standar untuk kompatibilitas yang lebih baik
-        model = tf.keras.models.load_model(model_path)
+        # Mendefinisikan ulang arsitektur model untuk menghindari bug "quantization_config" pada Keras 3
+        model = keras.models.Sequential([
+            keras.layers.Input(shape=(100,)),
+            keras.layers.Embedding(5000, 128),
+            keras.layers.LSTM(64, dropout=0.2, recurrent_dropout=0.2),
+            keras.layers.Dense(3, activation='softmax')
+        ])
+        
+        # Hanya memuat bobot (weights) saja dari file model
+        model.load_weights(model_path)
         
         with open(tokenizer_path, 'rb') as handle:
             tokenizer = pickle.load(handle)
