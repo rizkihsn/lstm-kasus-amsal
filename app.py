@@ -21,7 +21,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus+Jakarta+Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
     
     .stApp {
@@ -90,22 +90,33 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# 3. LOAD MODEL
 @st.cache_resource
 def load_model_ai():
-    import tensorflow as tf
+    # Menggunakan tf_keras sebagai solusi utama untuk kompatibilitas Railway
+    try:
+        import tf_keras as keras
+    except ImportError:
+        from tensorflow import keras
+    
     import pickle
 
-    model = tf.keras.models.load_model(
-        'model_training/sentiment_model_lstm.h5',
-        compile=False,
-        safe_mode=False   # 🔥 TAMBAHAN PENTING
+    # Path file
+    model_path = 'model_training/model_fix.keras'
+    tokenizer_path = 'model_training/tokenizer.pkl'
+
+    # Muat model dengan legacy engine (keras dari tf_keras)
+    model = keras.models.load_model(
+        model_path,
+        compile=False
     )
     
-    with open('model_training/tokenizer.pkl', 'rb') as handle:
+    with open(tokenizer_path, 'rb') as handle:
         tokenizer = pickle.load(handle)
         
     return model, tokenizer
 
+# Eksekusi pemuatan model
 model, tokenizer = load_model_ai()
 
 # 4. FUNGSI PREDIKSI
@@ -232,7 +243,7 @@ t1, t2 = st.tabs(["📊 Analisis Komprehensif", "☁️ WordCloud Data"])
 
 with t1:
     if os.path.exists('output_visual/infografis_1x1.png'):
-        st.image('output_visual/infografis_1x1.png', caption='Laporan Visualisasi LSTM', use_column_width=True)
+        st.image('output_visual/infografis_1x1.png', caption='Laporan Visualisasi LSTM', use_container_width=True)
     else:
         st.info("Visualisasi belum digenerate. Silakan jalankan training terlebih dahulu.")
 
