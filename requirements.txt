@@ -1,7 +1,6 @@
 streamlit
-tensorflow==2.15.0
-tf_keras==2.15.0
-h5py==3.10.0
+tensorflow==2.16.1
+keras==3.3.3
 numpy<2.0.0
 pandas
 scikit-learn

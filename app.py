@@ -90,23 +90,23 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. LOAD MODEL
+# 3. LOAD MODEL (Update untuk Keras 3 / Railway Compatibility)
 @st.cache_resource
 def load_model_ai():
-    # 1. Impor library di dalam fungsi untuk efisiensi cache & menghindari error versi
+    # Menggunakan Keras 3 secara langsung untuk menangani deserialization InputLayer
     try:
-        import tf_keras as keras
+        import keras
     except ImportError:
         from tensorflow import keras
     
     import pickle
     import os
 
-    # 2. Tentukan path file (sesuai hasil 'dir model_training')
+    # Tentukan path file
     model_path = 'model_training/sentiment_model_lstm.h5'
     tokenizer_path = 'model_training/tokenizer.pkl'
 
-    # 3. Validasi keberadaan file secara ketat
+    # Validasi keberadaan file
     if not os.path.exists(model_path):
         st.error(f"File model tidak ditemukan: {model_path}")
         st.stop()
@@ -115,15 +115,15 @@ def load_model_ai():
         st.error(f"File tokenizer tidak ditemukan: {tokenizer_path}")
         st.stop()
 
-    # 4. Proses muat model
+    # Muat model dengan Keras 3 engine
     try:
         model = keras.models.load_model(model_path, compile=False)
     except Exception as e:
         st.error(f"Gagal memuat model. Error: {e}")
-        st.info("Saran: Pastikan file 'requirements.txt' sudah berisi 'tf_keras==2.15.0' dan 'tensorflow==2.15.0'")
+        st.info("Pastikan requirements.txt sudah menggunakan tensorflow==2.16.1 dan keras==3.3.3")
         st.stop()
     
-    # 5. Proses muat tokenizer
+    # Muat tokenizer
     try:
         with open(tokenizer_path, 'rb') as handle:
             tokenizer = pickle.load(handle)
@@ -178,6 +178,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # MAIN
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
+# Pindahkan div penutup ke bagian bawah setelah blok Run
 st.subheader("🔍 Uji Sentimen Real-Time")
 st.write("Analisis emosi dan polaritas teks dalam hitungan detik.")
 
@@ -236,13 +237,11 @@ if st.session_state.run:
                 st.write(f"### Tingkat Keyakinan: **{score:.2f}%**")
                 st.progress(int(score))
 
-                # 🔥 DETAIL PROBABILITAS
                 st.write("Detail Probabilitas:")
                 st.write(f"Negatif: {probs[0]*100:.2f}%")
                 st.write(f"Netral: {probs[1]*100:.2f}%")
                 st.write(f"Positif: {probs[2]*100:.2f}%")
 
-                # 🔥 INSIGHT
                 if label == "Negatif":
                     st.warning("Teks mengandung opini negatif atau kritik.")
                 elif label == "Positif":
@@ -253,6 +252,7 @@ if st.session_state.run:
         st.session_state.run = False
     else:
         st.warning("Mohon masukkan teks terlebih dahulu.")
+
 st.markdown('</div>', unsafe_allow_html=True)
 
 # VISUALISASI
