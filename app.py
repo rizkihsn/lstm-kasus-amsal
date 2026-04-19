@@ -93,7 +93,7 @@ st.markdown("""
 # 3. LOAD MODEL
 @st.cache_resource
 def load_model_ai():
-    # Menggunakan tf_keras untuk kompatibilitas model .h5 lama/baru
+    # 1. Impor library di dalam fungsi untuk efisiensi cache
     try:
         import tf_keras as keras
     except ImportError:
@@ -102,47 +102,34 @@ def load_model_ai():
     import pickle
     import os
 
+    # 2. Tentukan path file
     model_path = 'model_training/sentiment_model_lstm.h5'
     tokenizer_path = 'model_training/tokenizer.pkl'
 
+    # 3. Validasi keberadaan file secara ketat
     if not os.path.exists(model_path):
         st.error(f"File model tidak ditemukan: {model_path}")
         st.stop()
     
-    # MUAT MODEL DENGAN CUSTOM OBJECTS (Jika diperlukan)
-    # Kita gunakan Keras Legacy untuk membaca file .h5 agar tidak error 'optional'
+    if not os.path.exists(tokenizer_path):
+        st.error(f"File tokenizer tidak ditemukan: {tokenizer_path}")
+        st.stop()
+
+    # 4. Proses muat model (dengan proteksi terhadap error versi)
     try:
         model = keras.models.load_model(model_path, compile=False)
-    except TypeError:
-        # Jika masih error, gunakan trik load_weights jika arsitektur diketahui, 
-        # tapi biasanya tf_keras sudah cukup menyelesaikan masalah ini.
-        st.error("Gagal memuat model. Pastikan requirements.txt sudah menyertakan 'tf_keras'")
+    except Exception as e:
+        st.error(f"Gagal memuat model. Error: {e}")
+        st.info("Saran: Pastikan file 'requirements.txt' sudah berisi 'tf_keras==2.15.0' dan 'tensorflow==2.15.0'")
         st.stop()
     
-    with open(tokenizer_path, 'rb') as handle:
-        tokenizer = pickle.load(handle)
-        
-    return model, tokenizer
-
-    # Sesuaikan dengan nama file asli di folder model_training
-    model_path = 'model_training/sentiment_model_lstm.h5'
-    tokenizer_path = 'model_training/tokenizer.pkl'
-
-    # Validasi keberadaan file sebelum diload
-    if not os.path.exists(model_path):
-        st.error(f"File model tidak ditemukan di: {model_path}")
+    # 5. Proses muat tokenizer
+    try:
+        with open(tokenizer_path, 'rb') as handle:
+            tokenizer = pickle.load(handle)
+    except Exception as e:
+        st.error(f"Gagal memuat tokenizer: {e}")
         st.stop()
-    
-    if not os.path.exists(tokenizer_path):
-        st.error(f"File tokenizer tidak ditemukan di: {tokenizer_path}")
-        st.stop()
-
-    # Muat model (.h5)
-    model = keras.models.load_model(model_path, compile=False)
-    
-    # Muat tokenizer
-    with open(tokenizer_path, 'rb') as handle:
-        tokenizer = pickle.load(handle)
         
     return model, tokenizer
     # Path file
