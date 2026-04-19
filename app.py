@@ -93,7 +93,7 @@ st.markdown("""
 # 3. LOAD MODEL
 @st.cache_resource
 def load_model_ai():
-    # 1. Impor library di dalam fungsi untuk efisiensi cache
+    # 1. Impor library di dalam fungsi untuk efisiensi cache & menghindari error versi
     try:
         import tf_keras as keras
     except ImportError:
@@ -102,7 +102,7 @@ def load_model_ai():
     import pickle
     import os
 
-    # 2. Tentukan path file
+    # 2. Tentukan path file (sesuai hasil 'dir model_training')
     model_path = 'model_training/sentiment_model_lstm.h5'
     tokenizer_path = 'model_training/tokenizer.pkl'
 
@@ -115,7 +115,7 @@ def load_model_ai():
         st.error(f"File tokenizer tidak ditemukan: {tokenizer_path}")
         st.stop()
 
-    # 4. Proses muat model (dengan proteksi terhadap error versi)
+    # 4. Proses muat model
     try:
         model = keras.models.load_model(model_path, compile=False)
     except Exception as e:
@@ -130,20 +130,6 @@ def load_model_ai():
     except Exception as e:
         st.error(f"Gagal memuat tokenizer: {e}")
         st.stop()
-        
-    return model, tokenizer
-    # Path file
-    model_path = 'model_training/model_fix.keras'
-    tokenizer_path = 'model_training/tokenizer.pkl'
-
-    # Muat model dengan legacy engine (keras dari tf_keras)
-    model = keras.models.load_model(
-        model_path,
-        compile=False
-    )
-    
-    with open(tokenizer_path, 'rb') as handle:
-        tokenizer = pickle.load(handle)
         
     return model, tokenizer
 
@@ -267,6 +253,7 @@ if st.session_state.run:
         st.session_state.run = False
     else:
         st.warning("Mohon masukkan teks terlebih dahulu.")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # VISUALISASI
 st.markdown("### 📈 Eksplorasi Visualisasi")
