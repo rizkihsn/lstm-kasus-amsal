@@ -100,7 +100,29 @@ def load_model_ai():
         from tensorflow import keras
     
     import pickle
+    import os
 
+    # Sesuaikan dengan nama file asli di folder model_training
+    model_path = 'model_training/sentiment_model_lstm.h5'
+    tokenizer_path = 'model_training/tokenizer.pkl'
+
+    # Validasi keberadaan file sebelum diload
+    if not os.path.exists(model_path):
+        st.error(f"File model tidak ditemukan di: {model_path}")
+        st.stop()
+    
+    if not os.path.exists(tokenizer_path):
+        st.error(f"File tokenizer tidak ditemukan di: {tokenizer_path}")
+        st.stop()
+
+    # Muat model (.h5)
+    model = keras.models.load_model(model_path, compile=False)
+    
+    # Muat tokenizer
+    with open(tokenizer_path, 'rb') as handle:
+        tokenizer = pickle.load(handle)
+        
+    return model, tokenizer
     # Path file
     model_path = 'model_training/model_fix.keras'
     tokenizer_path = 'model_training/tokenizer.pkl'
