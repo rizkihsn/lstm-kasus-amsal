@@ -108,7 +108,8 @@ with st.sidebar:
     st.write(f"- TensorFlow: {tf.__version__}")
     st.write(f"- Keras: {keras.__version__}")
 
-st.markdown('<h1 class="gradient-text">⚖️ Analisis Sentimen Publik: Kasus Amsal Sitepu</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="gradient-text">⚖️ Sentimen AI: Kasus Amsal</h1>', unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #555; font-size: 1.2rem; margin-top:-10px; margin-bottom:2rem;'>Pantau opini publik secara presisi menggunakan model Deep Learning LSTM.</p>", unsafe_allow_html=True)
 
 # METRICS
 m1, m2, m3 = st.columns(3)
@@ -119,13 +120,24 @@ m3.markdown('<div class="metric-box"><small>PROCESSING TIME</small><br><h2 style
 # MAIN UI
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
 st.subheader("🔍 Uji Sentimen Real-Time")
+st.markdown("<p>Analisis emosi dan polaritas teks dalam hitungan detik.</p>", unsafe_allow_html=True)
 
 if "text" not in st.session_state: 
     st.session_state.text = ""
 if "history" not in st.session_state: 
     st.session_state.history = []
 
-user_input = st.text_area("Ketik komentar di bawah ini:", value=st.session_state.text, height=150)
+st.markdown("**COBA CEPAT:**")
+q1, q2, q3, _ = st.columns([1,1,1,2])
+
+if q1.button("🌟 POSITIF"):
+    st.session_state.text = "Keputusan yang sangat adil dan transparan!"
+if q2.button("⚠️ NEGATIF"):
+    st.session_state.text = "Hukum tajam ke bawah, ini tidak adil bagi rakyat."
+if q3.button("⚖️ NETRAL"):
+    st.session_state.text = "Jaksa penuntut umum menghadirkan bukti baru dalam persidangan."
+
+user_input = st.text_area("Ketik komentar di bawah ini:", value=st.session_state.text, placeholder="Contoh: Saya rasa keputusan jaksa sudah tepat...", height=150)
 
 if st.button("JALANKAN ANALISIS SARAF"):
     if user_input.strip():
