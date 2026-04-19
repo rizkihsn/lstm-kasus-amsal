@@ -4,7 +4,8 @@ import numpy as np
 import pickle
 import re
 import os
-import keras
+import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # 1. KONFIGURASI HALAMAN
@@ -29,49 +30,75 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. LOAD MODEL (Optimal untuk Keras 3)
+# 3. LOAD MODEL (Kompatibel dengan Keras 3.3.3)
 @st.cache_resource
 def load_model_ai():
     model_path = 'model_training/sentiment_model_lstm.h5'
     tokenizer_path = 'model_training/tokenizer.pkl'
 
     if not os.path.exists(model_path) or not os.path.exists(tokenizer_path):
-        st.error("File model atau tokenizer tidak ditemukan di folder model_training!")
+        st.error("❌ File model atau tokenizer tidak ditemukan di folder model_training!")
         st.stop()
 
     try:
-        # Load menggunakan Keras 3 langsung
-        model = keras.models.load_model(model_path, compile=False)
+        # Load model dengan cara standar untuk kompatibilitas yang lebih baik
+        model = tf.keras.models.load_model(model_path)
+        
         with open(tokenizer_path, 'rb') as handle:
             tokenizer = pickle.load(handle)
+        
+        st.success("✅ Model berhasil dimuat!")
         return model, tokenizer
+        
     except Exception as e:
-        st.error(f"Gagal memuat model: {e}")
-        st.info("Pastikan requirements.txt menggunakan tensorflow==2.16.1 dan keras==3.3.3")
+        st.error(f"❌ Gagal memuat model: {str(e)}")
+        st.info("💡 Solusi:")
+        st.write("1. Pastikan TensorFlow==2.16.1 dan Keras==3.3.3 sudah terinstall")
+        st.write("2. Jalankan: `pip install --upgrade tensorflow==2.16.1 keras==3.3.3`")
+        st.write("3. Restart aplikasi")
         st.stop()
 
 model, tokenizer = load_model_ai()
 
 # 4. FUNGSI PREDIKSI
 def predict_sentiment(text, model, tokenizer):
-    text = text.lower()
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    sequences = tokenizer.texts_to_sequences([text])
-    padded = pad_sequences(sequences, maxlen=100)
-    prediction = model.predict(padded, verbose=0)
-    labels = ['Negatif', 'Netral', 'Positif']
-    result = labels[np.argmax(prediction)]
-    confidence = np.max(prediction) * 100
-    return result, confidence, prediction[0]
+    """
+    Prediksi sentimen dari teks input
+    """
+    try:
+        # Preprocessing
+        text = text.lower()
+        text = re.sub(r'[^a-zA-Z\s]', '', text)
+        
+        # Tokenisasi dan padding
+        sequences = tokenizer.texts_to_sequences([text])
+        padded = pad_sequences(sequences, maxlen=100)
+        
+        # Prediksi
+        prediction = model.predict(padded, verbose=0)
+        
+        labels = ['Negatif', 'Netral', 'Positif']
+        result = labels[np.argmax(prediction)]
+        confidence = np.max(prediction) * 100
+        
+        return result, confidence, prediction[0]
+    
+    except Exception as e:
+        st.error(f"Error pada prediksi: {e}")
+        return None, None, None
 
 # SIDEBAR & HEADER
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=100)
     st.markdown("### 🛠️ System Engine")
-    st.success("Model AI: LSTM Active")
+    st.success("✅ Model AI: LSTM Active")
     st.markdown("---")
     st.write("**Accuracy:** 92.4%")
     st.progress(92)
+    st.markdown("---")
+    st.write("**Framework:**")
+    st.write(f"- TensorFlow: {tf.__version__}")
+    st.write(f"- Keras: {keras.__version__}")
 
 st.markdown('<h1 class="gradient-text">⚖️ Analisis Sentimen Publik: Kasus Amsal Sitepu</h1>', unsafe_allow_html=True)
 
@@ -85,41 +112,64 @@ m3.markdown('<div class="metric-box"><small>PROCESSING TIME</small><br><h2 style
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
 st.subheader("🔍 Uji Sentimen Real-Time")
 
-if "text" not in st.session_state: st.session_state.text = ""
-if "history" not in st.session_state: st.session_state.history = []
+if "text" not in st.session_state: 
+    st.session_state.text = ""
+if "history" not in st.session_state: 
+    st.session_state.history = []
 
 user_input = st.text_area("Ketik komentar di bawah ini:", value=st.session_state.text, height=150)
 
 if st.button("JALANKAN ANALISIS SARAF"):
-    if user_input:
-        with st.spinner('Menganalisis...'):
+    if user_input.strip():
+        with st.spinner('⏳ Menganalisis sentimen...'):
             label, score, probs = predict_sentiment(user_input, model, tokenizer)
-            st.session_state.history.append((user_input, label))
             
-            st.markdown("---")
-            res_col1, res_col2 = st.columns([1,2])
-            with res_col1:
-                color = "#e8f5e9" if label == 'Positif' else "#ffebee" if label == 'Negatif' else "#e3f2fd"
-                text_color = "#2e7d32" if label == 'Positif' else "#c62828" if label == 'Negatif' else "#1565c0"
-                st.markdown(f'<div class="sentiment-label" style="background:{color}; color:{text_color};">{label}</div>', unsafe_allow_html=True)
-            with res_col2:
-                st.write(f"### Keyakinan: **{score:.2f}%**")
-                st.progress(int(score))
+            if label and score:
+                st.session_state.history.append((user_input, label))
+                
+                st.markdown("---")
+                res_col1, res_col2 = st.columns([1, 2])
+                
+                with res_col1:
+                    if label == 'Positif':
+                        color = "#e8f5e9"
+                        text_color = "#2e7d32"
+                    elif label == 'Negatif':
+                        color = "#ffebee"
+                        text_color = "#c62828"
+                    else:  # Netral
+                        color = "#e3f2fd"
+                        text_color = "#1565c0"
+                    
+                    st.markdown(
+                        f'<div class="sentiment-label" style="background:{color}; color:{text_color};">{label}</div>',
+                        unsafe_allow_html=True
+                    )
+                
+                with res_col2:
+                    st.write(f"### Keyakinan: **{score:.2f}%**")
+                    st.progress(int(score) / 100)
     else:
-        st.warning("Masukkan teks terlebih dahulu.")
+        st.warning("⚠️ Masukkan teks terlebih dahulu.")
+
 st.markdown('</div>', unsafe_allow_html=True)
 
 # VISUALISASI & HISTORY
 st.markdown("### 📈 Eksplorasi & Riwayat")
 t1, t2 = st.tabs(["📊 Visualisasi", "🕒 Riwayat"])
+
 with t1:
     if os.path.exists('output_visual/infografis_1x1.png'):
         st.image('output_visual/infografis_1x1.png', use_container_width=True)
     else:
-        st.info("Visualisasi tidak ditemukan.")
+        st.info("📌 Visualisasi tidak ditemukan di folder output_visual/")
+
 with t2:
     if st.session_state.history:
-        for h in reversed(st.session_state.history[-5:]):
-            st.text(f"[{h[1]}] {h[0][:50]}...")
+        st.write(f"**Total analisis: {len(st.session_state.history)}**")
+        st.markdown("---")
+        for i, h in enumerate(reversed(st.session_state.history[-5:]), 1):
+            sentiment_emoji = "😊" if h[1] == "Positif" else "😟" if h[1] == "Negatif" else "😐"
+            st.text(f"{sentiment_emoji} [{h[1]}] {h[0][:80]}...")
     else:
-        st.info("Belum ada riwayat.")
+        st.info("🕐 Belum ada riwayat analisis.")
