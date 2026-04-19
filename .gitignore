@@ -1,4 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
-.envgit
+*.csv
+*.ipynb
+data_collection/
+model_training/*.h5
