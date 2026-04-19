@@ -1,11 +1,7 @@
 streamlit
-tensorflow-cpu==2.15.0
+tensorflow==2.15.0
 tf_keras==2.15.0
+h5py==3.10.0
 numpy<2.0.0
 pandas
 scikit-learn
-matplotlib
-wordcloud
-nltk
-h5py
-# update deploy
